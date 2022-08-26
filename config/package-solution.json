@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "policy-solution-client-side-solution",
+    "id": "1ad5ebc1-b0d3-4b22-af62-f425738add39",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.14.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "PolicySolution description"
+      },
+      "longDescription": {
+        "default": "PolicySolution description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "policy-solution Feature",
+        "description": "The feature that activates elements of the policy-solution solution.",
+        "id": "4cbed971-be65-4095-8fb7-e6c3ef624c15",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/policy-solution.sppkg"
+  }
+}
