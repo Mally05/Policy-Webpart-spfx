@@ -6,6 +6,10 @@ declare interface IPolicyWebPartStrings {
   AppLocalEnvironmentTeams: string;
   AppSharePointEnvironment: string;
   AppTeamsTabEnvironment: string;
+  ListFieldLabel: string;
+  Title:string;
+  ListFieldLabel:string;
+  SelectListLabel: string;
 }
 
 declare module 'PolicyWebPartStrings' {
