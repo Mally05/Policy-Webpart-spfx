@@ -2,6 +2,8 @@ import { WebPartContext } from "@microsoft/sp-webpart-base";
 import { IReadonlyTheme} from '@microsoft/sp-component-base';
 
 export interface IPolicyWebPartProps {
+    siteName:string;
+    siteCollection: WebPartContext;
     description: string;
     lists: string;
     fields: any[];
@@ -12,4 +14,6 @@ export interface IPolicyWebPartProps {
     titleText:string;
     themeVariant: IReadonlyTheme | undefined;
     dateSigned: any;
+    checkboxLabel:string;
+    CheckboxPlaceholder:string;
   }

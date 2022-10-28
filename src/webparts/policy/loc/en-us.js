@@ -1,14 +1,18 @@
 define([], function() {
   return {
-    "PropertyPaneDescription": "Configure the web part below. Add description and connect the webpart to a SharePoint list. ",
+    "PropertyPaneDescription": "Configure the web part below. Add text for the title, description, checkbox and connect the webpart to a SharePoint list. ",
     "BasicGroupName": "Group Name",
     "DescriptionFieldLabel": "Description ",
-    "AppLocalEnvironmentSharePoint": "The app is running on your local environment as SharePoint web part",
-    "AppLocalEnvironmentTeams": "The app is running on your local environment as Microsoft Teams app",
-    "AppSharePointEnvironment": "The app is running on SharePoint page",
-    "AppTeamsTabEnvironment": "The app is running in Microsoft Teams",
-    "ListFieldLabel": "Select a policy list",
+    "SiteCollection":"Select a site",
+    "ListFieldLabel": "Select a list",
     "Title":"Title",
-    "SelectListLabel": "Please select item from list"
+    "SelectListLabel": "Please select item from list",
+    "CheckboxLabel": "Checkbox",
+    "CheckboxPlaceholder":"E.g. I accept the terms and conditions",
+    "Accepted":"You accepted ",
+    "On": "",
+    "LoadingMessage":"Just a second!",
+    "Description": "Add a description",
+    "TitlePlaceholder":"Add a title"
   }
 });

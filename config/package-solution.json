@@ -14,6 +14,16 @@
       "termsOfUseUrl": "",
       "mpnId": "Undefined-1.14.0"
     },
+    "webApiPermissionRequests": [
+      {
+        "resource": "Sign off",
+        "scope": "user_impersonation"
+      },
+      {
+        "resource": "Windows Azure Active Directory",
+        "scope": "User.Read"
+      }
+    ],
     "metadata": {
       "shortDescription": {
         "default": "Approve sharepoint content."

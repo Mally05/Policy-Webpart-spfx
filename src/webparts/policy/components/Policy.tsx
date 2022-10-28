@@ -14,6 +14,7 @@ import  {SPService}  from "../../service/Service";
 import { IPolicyWebPartProps } from "./IPolicyWebPartProps";
 import styles from './Policy.module.scss';
 import { SPHttpClientResponse} from "@microsoft/sp-http";
+import * as strings from "PolicyWebPartStrings";
 
 interface IListProps{
   signed: any;
@@ -30,14 +31,14 @@ const SuccessExample = (p:IListProps) => (
     messageBarType={MessageBarType.success}
     isMultiline={false}
   >
-    You accepted this {p.listName} on <strong>{p.signed}</strong>
+    {strings.Accepted} {p.listName} {strings.On} <strong>{p.signed}</strong>
   </MessageBar>
 );
 
  export default class Policy extends React.Component<IPolicyWebPartProps, CheckedState> {
   
    private _services: SPService;
-   private isChecked: boolean = false;
+   private isChecked: boolean;
    private listName: string;
    private dateSigned: any;
 
@@ -51,31 +52,37 @@ const SuccessExample = (p:IListProps) => (
    
    
 componentDidUpdate(prevProps: Readonly<IPolicyWebPartProps>, prevState: Readonly<CheckedState>, snapshot?: any): void {
-  if(prevState.checked !== this.isChecked){
-    const listName = this.getListName(prevProps.listName);
-    this._services.hasApprovedPolicyForSelectedList(this.props.context, listName)
-      .then((res:any)=>{
+  if(prevProps.isChecked !== this.props.isChecked && this.props.listName !== prevProps.listName){
+    const listName = this.getListName(this.props.listName);
+    const result = this._services.hasApprovedSelectedList(this.props.context, listName,this.props.siteCollection)
+    result.then((res:any)=>{
         this.setState({checked: res.checked, date: res.modified})
-        console.log(res,"ResUpdate")
       })
   }
-    console.log(prevState.checked,"DidUpdateState")
 }
-componentDidMount(): void {
-  this._services.loadDropdownListOptions(this.props.context).then((item:any) =>{
-      
-      item.filter((x:any) => x.key ==this.props.listName ).map(listname => {
-      listname.text
-      this._services.hasApprovedPolicyForSelectedList(this.props.context, listname.text)
-     .then((res:any)=>{
-       if(res.checked){
-         this.setState({checked: res.checked, date: res.modified})
-       } 2     
-       console.log(res,"DidMount")
-     })
-      })
-    });
-     console.log("Didmount")
+
+async componentDidMount(): Promise<void> {
+  
+  //  this._services.patchTenantIdTolist(this.props.context);
+
+   const currentUserEmail = this.props.context.pageContext.user.email;
+
+   const selectedSite = await this._services.getListsForSelectedSites(this.props.context, this.props.siteCollection)
+
+   const selectedList: any = await selectedSite.value.filter((x:any) => x.Id ==this.props.listName).map((listname: any) => {return listname.Title});
+   
+   const itemObj = await this._services.getItemsFromSelectedList(this.props.context, selectedList[0], this.props.siteCollection);
+
+   const hasApproved = await this._services.hasApprovedSelectedList(this.props.context,selectedList[0], this.props.siteCollection);
+   
+   
+   const {checked, modified} = hasApproved
+
+    if(checked){
+      const date = new Date(modified);
+      this.setState({checked: checked, date: date.toDateString()})
+    }
+
    }
 
 
@@ -88,7 +95,10 @@ componentDidMount(): void {
        context,
        isConfigured,
        fields,
-       dateSigned
+       dateSigned,
+       siteName,
+       checkboxLabel,
+       CheckboxPlaceholder
      } = this.props;
 
      
@@ -102,20 +112,21 @@ componentDidMount(): void {
         </div>
          <div className={`${styles.checkBoxDiv}`}>
            <Checkbox
-             label="I accept the terms and conditions"
+             label={checkboxLabel}
              onChange={this._setCheckBoxValue.bind(this) }
             />
          </div>
        </div>
      ) : (
-      <div className={styles.outerDiv} >
+      <div className={styles.outerDiv} id="successLoad" >
       <Stack>
           {<SuccessExample signed={dateSigned === undefined || null ? this.state.date : dateSigned} listName={titleText}/>}
       </Stack>
       <div>
         <Checkbox
           className={`${styles.checkBoxDivDisabled}`}
-          label="I accept the terms and conditions"
+          label={checkboxLabel}
+
           disabled
           defaultChecked
          />
@@ -132,49 +143,46 @@ componentDidMount(): void {
 
      public async _setCheckBoxValue(event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,newValue: boolean) {
 
-     this._services.loadDropdownListOptions(this.props.context).then((item:any) =>{
+
+      const currentUserEmail = this.props.context.pageContext.user.email;
+
+      const selectedSite = await this._services.getListsForSelectedSites(this.props.context, this.props.siteCollection)
+   
+      const selectedList: any = await selectedSite.value.filter((x:any) => x.Id ==this.props.listName).map((listname: any) => {return listname.Title});
       
-      item.filter((x:any) => x.key ==this.props.listName ).map(listname => {
-      listname.text
-      this._services.hasApprovedPolicyForSelectedList(this.props.context, listname.text);
-     if (newValue == true && listname.text !== "") {
+      const itemObj = await this._services.getItemsFromSelectedList(this.props.context, selectedList[0],this.props.siteCollection)
+      
+      const items = await itemObj.res;
+   
+     if (newValue == true && selectedList[0] !== "") {
+      
        const items: any = {
          currentUser: this.props.context.pageContext.user.email,
          context: this.props.context,
-         listName: listname.text,
+         siteCollection: this.props.siteCollection,
+         listName: selectedList[0],
          Status: newValue,
          _spHttpContext: this.props.context.spHttpClient,
        };
-        this._services.patchItemToSharePoint(items).then((response:any) => { 
-           if (response.response.ok) {
-            if(this.isChecked){
-              this.isChecked  = true;
-              const date = new Date(response.modified)
-              this.setState({checked:response.checked, date:date.toDateString()});
-              console.log("Success");
-            }
-           } else {
-             this.isChecked = false;
-             console.log("Failed to post");     
-           }
-         })
-         .catch((err) => {
-           console.log(
-             `Failed to post to Sharepoint list: ${this.props.listName}. Error:`,err
-           );
-         });
-     }     
-      this._services.hasApprovedPolicyForSelectedList(this.props.context, listname.text);
-      })})
-    this.dateSigned = this.props.dateSigned;
+       
+       const response = await this._services.patchItemToSharePoint(items).catch((err) => {
+        console.log(
+          `Failed to post to Sharepoint list: ${selectedList[0]}. Error:`,err
+        );
+      });
 
-     this.render();
-
-     if(newValue == true){
-      this.isChecked = newValue;
-    }else{
-      this.isChecked = newValue;
-    }
-     console.log("checked: ", this.state.checked);
-   }
- }
+      if(response !== undefined){
+        if (response.response.ok && newValue) {
+          this.isChecked  = newValue;
+          const date = new Date(response.modified)
+          this.setState({checked:response.checked, date:date.toDateString()});
+          console.log("Success");
+        } 
+      }else {
+        this.isChecked = false;
+        this.setState({checked: this.isChecked})
+        console.error("Couldn't find you in the selected list");     
+      }
+    }     
+  }
+}

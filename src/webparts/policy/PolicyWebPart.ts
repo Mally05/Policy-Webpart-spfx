@@ -12,17 +12,16 @@ import {
   BaseClientSideWebPart,
   WebPartContext,
 } from "@microsoft/sp-webpart-base";
-import { IODataList } from "@microsoft/sp-odata-types";
 import * as strings from "PolicyWebPartStrings";
 import Policy from "./components/Policy";
 import { sp } from "@pnp/sp";
 import  {SPService}  from "../service/Service";
-import { has } from "@microsoft/sp-lodash-subset";
 import { IReadonlyTheme, ThemeChangedEventArgs, ThemeProvider } from '@microsoft/sp-component-base';
-import { ThemeSettingName } from "office-ui-fabric-react";
 import _onconfigure from './components/Policy';
+import { AadHttpClient, HttpClientResponse,ISPHttpClientOptions } from '@microsoft/sp-http';
 
 export interface IPolicyWebPartProps {
+  siteName:string;
   description: string;
   lists: string;
   fields: any[];
@@ -33,6 +32,8 @@ export interface IPolicyWebPartProps {
   titleText:string;
   themeVariant: IReadonlyTheme | undefined;
   dateSigned: any;
+  siteCollection: any[];
+  checkboxLabel: string;
 }
 
 export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartProps> {
@@ -41,7 +42,8 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
   private loadingIndicator:boolean = true;
   private _services: SPService;
   public _listFields: IPropertyPaneDropdownOption[] = [];
-  private isFetched: boolean = false;
+  public siteCollections: IPropertyPaneDropdownOption[] = [];
+  private isFetched: boolean = true;
   protected _relativeEndUrl: string;
   public tenantName: string;
   public configured:boolean = false;
@@ -50,25 +52,43 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
   public displayName:string;
   public dateSigned: any;
   public listName: string;
+  public siteName:string
 
   protected onInit(): Promise<void> {
     return super.onInit().then((_) => {
 
-    this.listName =this.getListName(this.properties.listName)
-    console.log("listname OnInit(): ", this.listName);
-    
+      console.log("ClientID: ",this.context.pageContext)
+      console.log("Site: ",this.context.pageContext.site.absoluteUrl)
+
+      let client = new AadHttpClient(this.context.serviceScope,"639e1eed-fd88-47d1-a893-82517b799865");
+      console.log("ServiceScope: ",this.context.serviceScope)
+      const body:any ={
+        name: this.context.pageContext.site.absoluteUrl
+      }
+      const aadClientOptions: ISPHttpClientOptions = {body: JSON.stringify(body)};
+
+      client.post("https://sign-off-app.azurewebsites.net/api/demo?",AadHttpClient.configurations.v1,{body: aadClientOptions.body})
+      .then((x:HttpClientResponse) =>{
+        x.json().then(result => {
+          console.log(result.status);
+        }).catch(err => {
+          console.error(err)
+        })
+      }).catch(error =>{
+        console.log(error);
+      })
+
     sp.setup(this.context);
     this._themeProvider = this.context.serviceScope.consume(
       ThemeProvider.serviceKey
-    );
-
-    this._themeVariant = this._themeProvider.tryGetTheme();
-    this._themeProvider.themeChangedEvent.add(
-      this,
-      this._handleThemeChangeEvent 
-    );
-    this._services = new SPService();
-
+      );
+      
+      this._themeVariant = this._themeProvider.tryGetTheme();
+      this._themeProvider.themeChangedEvent.add(
+        this,
+        this._handleThemeChangeEvent);
+        this._services = new SPService();
+        this.getLists();
       this.context.propertyPane.open();
     });
   }
@@ -82,6 +102,7 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
     const element: React.ReactElement<IPolicyWebPartProps> = React.createElement(
       Policy,
       {
+        siteCollection:this.properties.siteCollection,
         context: this.context,
         description: this.properties.description,
         lists: this.properties.lists,
@@ -91,17 +112,28 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
         isChecked: this.isChecked,
         titleText:this.properties.titleText,
         themeVariant: this._themeVariant,
-        dateSigned: this.dateSigned
+        dateSigned: this.dateSigned,
+        siteName: this.properties.siteName,
+        checkboxLabel: this.properties.checkboxLabel
       }
     );
 
     ReactDom.render(element, this.domElement);
   }
 
-  protected onDispose(): void {
+     private getLists = () =>{
+      if(this.properties.siteCollection !== undefined){
+        this._services.loadDropdownListOptions(this.properties.context, this.properties.siteCollection);
+        this._services.loadSiteCollections();
+      }else {
+        this._services.loadSiteCollections();
+      }
+    }
+
+    protected onDispose(): void {
    
     const listname = this.getListName(this.properties.listName);
-    this._services.hasApprovedPolicyForSelectedList(this.context, listname);
+    this._services.getItemsFromSelectedList(this.context, listname);
     ReactDom.unmountComponentAtNode(this.domElement);
   }
   
@@ -120,7 +152,9 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
     this.domElement.style.setProperty('--bodyText', semanticColors.bodyText);
     this.domElement.style.setProperty('--link', semanticColors.link);
     this.domElement.style.setProperty('--linkHovered', semanticColors.linkHovered);
-
+  }
+  public async loadDropdown(){
+      
   }
 
   public getListName(listId:string){  
@@ -131,27 +165,36 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
   }
 
   protected async onPropertyPaneFieldChanged(propertyPath: string, oldValue: any, newValue: any) {
-    if (propertyPath === 'listName' && newValue) {
+      if (propertyPath === 'siteCollection' && newValue) {
+        this.loadingIndicator = true;
+        this._services.loadDropdownListOptions(this.context,newValue).then(x =>{
+          this._listFields = x;
+          this.isFetched = false;
+          super.onPropertyPaneFieldChanged(propertyPath, oldValue, newValue);
+           this.context.propertyPane.refresh();
+           this.loadingIndicator =false;
+        })
+      this.context.propertyPane.refresh();
+    } else if 
+    (propertyPath === 'listName' && newValue ) {
       const newListName = this.getListName(newValue);
       const oldListName = this.getListName(oldValue);
-      const item = await this._services.hasApprovedPolicyForSelectedList(this.context, newListName);
+      const item = await this._services.getItemsFromSelectedList(this.context, newListName,this.properties.siteCollection);
+      super.onPropertyPaneFieldChanged(propertyPath, oldListName, newListName);
       this.dateSigned = item.modified;
       this.isChecked = item.checked === undefined ? item : item.checked;
-      this.configured = item.isConfigured === undefined ? item : item.isConfigured;
+      this.configured = item.checked === undefined ? item : item.checked;
       this.context.propertyPane.refresh();
-      console.log(oldListName)
-      super.onPropertyPaneFieldChanged(propertyPath, oldListName, newListName);
-
     }
     else {
       super.onPropertyPaneFieldChanged(propertyPath, oldValue, oldValue);
+      }
     }
-  }
 
   //TODO: Loading indicator
-
+  
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
-
+  
     return {
       showLoadingIndicator:this.loadingIndicator,
       loadingIndicatorDelayTime: 1,
@@ -165,35 +208,45 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
               groupFields: [
                 PropertyPaneTextField("titleText", {
                   label: strings.Title,
+                  placeholder: strings.TitlePlaceholder
                 }),
                 PropertyPaneTextField("description", {
                   label: strings.DescriptionFieldLabel,
-                  multiline:true
+                  multiline:true,
+                  placeholder:strings.Description
                 }),
-                PropertyPaneDropdown("listName", {
+                PropertyPaneTextField("checkboxLabel", {
+                  label: strings.CheckboxLabel,
+                  placeholder: strings.CheckboxPlaceholder
+                }),
+                 PropertyPaneDropdown("siteCollection", {
+                  label: strings.SiteCollection,
+                  options: this.siteCollections,
+                  selectedKey: this.properties.siteName,
+                  disabled: this.loadingIndicator
+                }),
+                PropertyPaneDropdown("listName",{
                   label: strings.ListFieldLabel,
                   options: this._listFields,
+                  disabled: this.isFetched || this.loadingIndicator,
                   selectedKey: this.properties.listName,
-                  disabled:this.loadingIndicator
-                }),
+                })
               ],
-            },
+            }
           ],
         },
       ],
     };
   }
 
-  
-  protected onPropertyPaneConfigurationStart(): void {
-    if(!this.isFetched){
-      this._services.loadDropdownListOptions(this.context).then((response)=>{
-        this._listFields = response;
-        this.isFetched = true;
-        this.loadingIndicator = false;
-        this.context.propertyPane.refresh();          
-      });
+  protected async onPropertyPaneConfigurationStart(): Promise<void> {
+    if(this.loadingIndicator){
+      const response = await this._services.loadSiteCollections();
+      this.siteCollections = response;
+      this.loadingIndicator = false;
     }
+      this.context.propertyPane.refresh(); 
+    
     this.render();
   }
 }
