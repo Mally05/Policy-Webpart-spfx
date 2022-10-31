@@ -57,26 +57,26 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
   protected onInit(): Promise<void> {
     return super.onInit().then((_) => {
 
-      console.log("ClientID: ",this.context.pageContext)
-      console.log("Site: ",this.context.pageContext.site.absoluteUrl)
+      // console.log("ClientID: ",this.context.pageContext)
+      // console.log("Site: ",this.context.pageContext.site.absoluteUrl)
 
-      let client = new AadHttpClient(this.context.serviceScope,"639e1eed-fd88-47d1-a893-82517b799865");
-      console.log("ServiceScope: ",this.context.serviceScope)
-      const body:any ={
-        name: this.context.pageContext.site.absoluteUrl
-      }
-      const aadClientOptions: ISPHttpClientOptions = {body: JSON.stringify(body)};
+      // let client = new AadHttpClient(this.context.serviceScope,"639e1eed-fd88-47d1-a893-82517b799865");
+      // console.log("ServiceScope: ",this.context.serviceScope)
+      // const body:any ={
+      //   name: this.context.pageContext.site.absoluteUrl
+      // }
+      // const aadClientOptions: ISPHttpClientOptions = {body: JSON.stringify(body)};
 
-      client.post("https://sign-off-app.azurewebsites.net/api/demo?",AadHttpClient.configurations.v1,{body: aadClientOptions.body})
-      .then((x:HttpClientResponse) =>{
-        x.json().then(result => {
-          console.log(result.status);
-        }).catch(err => {
-          console.error(err)
-        })
-      }).catch(error =>{
-        console.log(error);
-      })
+      // client.post("https://sign-off-app.azurewebsites.net/api/demo?",AadHttpClient.configurations.v1,{body: aadClientOptions.body})
+      // .then((x:HttpClientResponse) =>{
+      //   x.json().then(result => {
+      //     console.log(result.status);
+      //   }).catch(err => {
+      //     console.error(err)
+      //   })
+      // }).catch(error =>{
+      //   console.log(error);
+      // })
 
     sp.setup(this.context);
     this._themeProvider = this.context.serviceScope.consume(
