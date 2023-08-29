@@ -1,7 +1,8 @@
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 import { IReadonlyTheme} from '@microsoft/sp-component-base';
+import { IPropertyFieldGroupOrPerson, IPropertyFieldPeoplePickerProps } from "@pnp/spfx-property-controls";
 
-export interface IPolicyWebPartProps {
+ export interface IPolicyWebPartProps {
     siteName:string;
     siteCollection: WebPartContext;
     description: string;
@@ -16,4 +17,6 @@ export interface IPolicyWebPartProps {
     dateSigned: any;
     checkboxLabel:string;
     CheckboxPlaceholder:string;
+    hasLicence:boolean;
+    people: IPropertyFieldGroupOrPerson[];
   }

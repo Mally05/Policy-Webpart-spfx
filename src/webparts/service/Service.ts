@@ -1,5 +1,5 @@
 import { WebPartContext } from "@microsoft/sp-webpart-base";
-import { sp,SearchResults, Items } from "@pnp/sp/presets/all";
+import { sp,SearchResults, Items, ISiteGroupInfo, Item, Web } from "@pnp/sp/presets/all";
 import {
   SPHttpClient,
   SPHttpClientResponse,
@@ -10,14 +10,19 @@ import { IODataList } from "@microsoft/sp-odata-types";
 import "@pnp/sp/webs";
 import "@pnp/sp/lists";
 import "@pnp/sp/items";
-import { Web } from '@pnp/sp/presets/all';
-import PolicyWebPart from "../policy/PolicyWebPart";
-import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
+import "@pnp/sp/security/web";
+import "@pnp/sp/security/list";
+import "@pnp/sp/security/item";
+import { Guid, Validate } from "@microsoft/sp-core-library";
+import { IList } from "@pnp/sp/lists";
+import { resultItem } from "office-ui-fabric-react/lib/components/FloatingPicker/PeoplePicker/PeoplePicker.scss";
+import { ISecurableMethods } from "@pnp/sp/security/types";
+import {IPolicyWebPartProps} from "../../webparts/policy/components/IPolicyWebPartProps";
+import { GroupShowAll } from "office-ui-fabric-react";
 
-  export class SPService {
-  
-  private web = Web("https://connectkonicaminolta.sharepoint.com/sites/BSW_BPS");  
-   
+
+export class SPService {
+  public IPolicyWebPartProps = require("../../webparts/policy/components/IPolicyWebPartProps");
 
 
     public async getSiteCollections() {
@@ -29,12 +34,12 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
           TrimDuplicates: false,
         })
         .then((searchResults: SearchResults) => {
-          return searchResults.PrimarySearchResults
+          return searchResults.PrimarySearchResults;
         });
-        return item
+        return item;
 
       } catch (error) {
-        console.log("Couldn't fetch Site collection data: ", error)
+        console.log("Couldn't fetch Site collection data: ", error);
       }
     }
 
@@ -73,7 +78,7 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
     }
 
     public async getItemsFromSelectedList(context: WebPartContext,listName: string, url?:any) {
-      const uri = `${url}/_api/web/lists/GetByTitle('${listName}')/items?$select=Id,Approved,Modified,Employee/EMail&$expand=Employee/Id`;
+      const uri = `${url}/_api/web/lists/GetByTitle('${listName}')/items?$select=Id,Godk_x00e4_nd,Modified,Anst_x00e4_lld/EMail&$expand=Anst_x00e4_lld/Id`;
       try {
         return await context.spHttpClient
           .get(uri, SPHttpClient.configurations.v1)
@@ -83,7 +88,7 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
                 checked: false,
                 isConfigured:true,
                 res: res.json()
-              }
+              };
               return item;
 
             } else {
@@ -91,8 +96,8 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
                 checked: false,
                 isConfigured: true,
               };
-              console.log(`There was an error: \n Can't find columns: Approved, Modified, Employee in ${listName}`);
-              return item
+              console.log(`There was an error: \n Can't find columns: Anställd, Modified or Godkänd in ${listName}`);
+              return item;
             }
           });
       } catch (error) {
@@ -108,44 +113,48 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
           const currentUserEmail = context.pageContext.user.email;
           const convertToArray = [];
           convertToArray.push(item);
-          const spItem = convertToArray[0].value.filter((x: any) => currentUserEmail == x.Employee.EMail);
+          // tslint:disable-next-line: no-shadowed-variable
+          const spItem = convertToArray[0].value.filter((x: any) => currentUserEmail == x.Anst_x00e4_lld.EMail);
   
           if (spItem.length > 0) {
             for (var i = 0; i < spItem.length; i++) {
               let items = spItem[i];
-              if (items.Employee.EMail == currentUserEmail && items.Approved == true) {
+              if (items.Anst_x00e4_lld.EMail == currentUserEmail && items.Godk_x00e4_nd == true) {
                 console.log("You have accepted this policy");
                 const date = new Date(items.Modified);
                 const spObj = {
                   checked: true,
-                  modified: date.toDateString(),
+                  modified: date.toLocaleDateString(),
                 };
                 return spObj;
 
-              } else if (items.Employee.EMail == currentUserEmail && items.Approved == false) {
+              } else if (items.Anst_x00e4_lld.EMail == currentUserEmail && items.Godk_x00e4_nd == false) {
                 console.log("You have not accepted this policy");
+                // tslint:disable-next-line: no-shadowed-variable
                 const item: any = {
                   checked: false,
                   isConfigured: true,
                 };
                 return item;
 
-              } else if (items.Employee.EMail !== "") {
+              } else if (items.Anst_x00e4_lld.EMail !== "") {
+                // tslint:disable-next-line: no-shadowed-variable
                 const item: any = {
                   checked: false,
                   isConfigured: true,
                 };
                  console.error("We couldn't find you in the list please make sure you are added to the selected policy list.");
 
-                return item
+                return item;
               }
             }
           }else {
+            // tslint:disable-next-line: no-shadowed-variable
             const item: any = {checked: false,isConfigured: true};
              console.error("We couldn't find you in the list please make sure you are added to the selected policy list.");
-            return item
+            return item;
           }
-        })
+        });
         return result;
       }).catch( () =>{
         const item: any = {
@@ -156,8 +165,8 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
       });
       console.log("Approved??",hasApproved);
       return hasApproved;
-    };
-    public async loadSiteCollections() {
+    }
+     public async loadSiteCollections() {
      return await this.getSiteCollections().then((results: any) => {
           const arr: Array<IPropertyPaneDropdownOption> =
           new Array<IPropertyPaneDropdownOption>();
@@ -187,8 +196,8 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
 
     public async patchItemToSharePoint({listName,Status,context,_spHttpContext,currentUser,siteCollection}) {
       const spitems = await this.getItemsFromSelectedList(context, listName,siteCollection);
-      const result = await spitems.res.catch((error:any) =>{ console.error(error)});
-      const filteredResult = await result.value.filter((spItem: any) => currentUser == spItem.Employee.EMail);   
+      const result = await spitems.res.catch((error:any) =>{ console.error(error);});
+      const filteredResult = await result.value.filter((spItem: any) => currentUser == spItem.Anst_x00e4_lld.EMail);   
 
       if(filteredResult.length <= 0){
         return console.error("Failed to post");
@@ -197,7 +206,7 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
       const { Id , Modified }: any = filteredResult[0];
       const url = `${siteCollection}/_api/web/lists/getbytitle('${listName}')/items(${Id})`;
       
-      const body: any = { Approved: Status};
+      const body: any = { Godk_x00e4_nd: Status};
       const spHttpClientOptions: ISPHttpClientOptions = { body: JSON.stringify(body)};
 
       try {
@@ -216,6 +225,7 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
           }
         );
 
+        // tslint:disable-next-line: no-shadowed-variable
         const result: any = {
           modified: Modified,
           response: spPost,
@@ -228,16 +238,59 @@ import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
       }
     }
 
-    // public async patchTenantIdTolist(context: WebPartContext){
-    //   const listname = "Sign Off Whitelist";
-    // try {
-    //      await this.web.lists.getByTitle(listname).items.add({
-    //       SiteURL: context.pageContext.site.absoluteUrl
-    //     })
-    //     console.log("first patch succeded!")
-        
-    //   } catch (error) {
-    //     console.log("This keeps failing for some reason :(",error)
-    //   }
-    // }
+  public async getListOfgroups(context: WebPartContext,siteUrl:WebPartContext) {
+    const uri = `${siteUrl}/_api/web/sitegroups`;
+
+    context.spHttpClient.get(uri,SPHttpClient.configurations.v1)
+    .then((response:any) =>{
+      if(response.ok){
+        response.json().then((member:any) => {
+          console.log("O365 groups: ",member);
+        });
+      }
+    });
+}
+
+   public async getGroupMembers(context: WebPartContext, siteUrl:WebPartContext, group:Array<any>){
+
+    for (let index = 0; index < group.length; index++) {
+      const element = group[index];
+      
+      const uri = `${siteUrl}/_api/web/sitegroups/getbyname('${element.fullName}')/users`;
+
+      context.spHttpClient.get(uri,SPHttpClient.configurations.v1)
+      .then((response:any) =>{
+        if(response.ok){
+          response.json().then((member:any) => {
+            console.log("Get Members: ",member);
+
+            return member;
+          });
+        }
+      });
+    }
+
   }
+
+    public async addUsersToSharePointList(){
+
+    }
+
+    public async setListPermissions(context: WebPartContext,listName:string, ){
+
+    const web = Web(`${context}`);  
+
+    const {Id:permissionId} = await web.roleDefinitions.getByName("Read").get();
+    const ee = await web.roleDefinitions.get();
+    console.log("ee",ee);
+
+    const groups = await web.roleAssignments.get();
+    console.log("Id: ", permissionId);
+
+    const url = web.lists.getByTitle(`${listName}`);
+    url.breakRoleInheritance(false);
+
+    url.roleAssignments.remove(5,permissionId);
+    }
+} 
+ 

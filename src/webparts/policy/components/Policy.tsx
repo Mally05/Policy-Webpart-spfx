@@ -26,10 +26,10 @@ checked: boolean;
 date:any
 }
 
-const SuccessExample = (p:IListProps) => (
+const SuccessExample = (p?:IListProps) => (
   <MessageBar
     messageBarType={MessageBarType.success}
-    isMultiline={false}
+    isMultiline={true}
   >
     {strings.Accepted} {p.listName} {strings.On} <strong>{p.signed}</strong>
   </MessageBar>
@@ -51,7 +51,8 @@ const SuccessExample = (p:IListProps) => (
   
    
    
-componentDidUpdate(prevProps: Readonly<IPolicyWebPartProps>, prevState: Readonly<CheckedState>, snapshot?: any): void {
+async componentDidUpdate(prevProps: Readonly<IPolicyWebPartProps>, prevState: Readonly<CheckedState>, snapshot?: any): Promise<void> {
+  this.listName = this.getListName(this.props.listName);
   if(prevProps.isChecked !== this.props.isChecked && this.props.listName !== prevProps.listName){
     const listName = this.getListName(this.props.listName);
     const result = this._services.hasApprovedSelectedList(this.props.context, listName,this.props.siteCollection)
@@ -62,7 +63,7 @@ componentDidUpdate(prevProps: Readonly<IPolicyWebPartProps>, prevState: Readonly
 }
 
 async componentDidMount(): Promise<void> {
-  
+  this.listName = this.getListName(this.props.listName);
   //  this._services.patchTenantIdTolist(this.props.context);
 
    const currentUserEmail = this.props.context.pageContext.user.email;
@@ -75,18 +76,18 @@ async componentDidMount(): Promise<void> {
 
    const hasApproved = await this._services.hasApprovedSelectedList(this.props.context,selectedList[0], this.props.siteCollection);
    
-   
    const {checked, modified} = hasApproved
 
     if(checked){
       const date = new Date(modified);
-      this.setState({checked: checked, date: date.toDateString()})
+      this.setState({checked: checked, date: date.toLocaleDateString()})
     }
 
    }
 
 
    public  render(): React.ReactElement<IPolicyWebPartProps> {
+    
      var {
        description,
        titleText,
@@ -120,13 +121,12 @@ async componentDidMount(): Promise<void> {
      ) : (
       <div className={styles.outerDiv} id="successLoad" >
       <Stack>
-          {<SuccessExample signed={dateSigned === undefined || null ? this.state.date : dateSigned} listName={titleText}/>}
+          { <SuccessExample signed={dateSigned === undefined || null ? this.state.date : dateSigned} listName={this.listName}/>}
       </Stack>
       <div>
         <Checkbox
           className={`${styles.checkBoxDivDisabled}`}
           label={checkboxLabel}
-
           disabled
           defaultChecked
          />
@@ -175,7 +175,7 @@ async componentDidMount(): Promise<void> {
         if (response.response.ok && newValue) {
           this.isChecked  = newValue;
           const date = new Date(response.modified)
-          this.setState({checked:response.checked, date:date.toDateString()});
+          this.setState({checked:response.checked, date:date.toLocaleDateString()});
           console.log("Success");
         } 
       }else {
