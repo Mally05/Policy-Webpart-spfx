@@ -53,25 +53,25 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
       .then((x:boolean) => {
         return this.properties.hasLicence = x;
       });
-      
+
       sp.setup(this.context);
      
       this._themeProvider = this.context.serviceScope.consume(
         ThemeProvider.serviceKey
       );
 
-      console.log("People", this.properties.people);
+      // console.log("People", this.properties.people);
 
       this._themeVariant = this._themeProvider.tryGetTheme();
       this._themeProvider.themeChangedEvent.add(
         this,
         this._handleThemeChangeEvent);
         this._services = new SPService();
-        this._services.getGroupMembers(this.context,this.properties.siteCollection, this.properties.people);
-        const listname = this.getListName(this.properties.listName);
-        this.loadUserGroups();
+        // this._services.getGroupMembers(this.context,this.properties.siteCollection, this.properties.people);
+        // const listname = this.getListName(this.properties.listName);
+        // this.loadUserGroups();
         this.getAzureBlobWhitelistFile(this.context);
-        this._services.setListPermissions(this.properties.siteCollection,listname);
+        // this._services.setListPermissions(this.properties.siteCollection,listname);
         this.getLists();
       this.context.propertyPane.open();
     });
@@ -90,12 +90,12 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
     return whiteList.some(x =>  domain.hostname == x.url ? this.properties.hasLicence = true : this.properties.hasLicence = false);
   }
 
-  protected async loadUserGroups(){
-   const groups = await this._services.getListOfgroups(this.context,this.properties.siteCollection);
-   this.userGroups = groups;
+  // protected async loadUserGroups(){
+  //  const groups = await this._services.getListOfgroups(this.context,this.properties.siteCollection);
+  //  this.userGroups = groups;
 
-   console.log("OnInit: ", this.userGroups);
-  }
+  //  console.log("OnInit: ", this.userGroups);
+  // }
 
   private _handleThemeChangeEvent(args: ThemeChangedEventArgs): void {
     this._themeVariant = args.theme;
@@ -238,18 +238,18 @@ export default class PolicyWebPart extends BaseClientSideWebPart<IPolicyWebPartP
                   disabled: this.isFetched || this.loadingIndicator,
                   selectedKey: this.properties.listName,
                 }),
-                PropertyFieldPeoplePicker('people',{
-                  label: 'Add people or group to list',
-                  initialData: this.properties.people,
-                  allowDuplicate: false,
-                  principalType: [PrincipalType.Users, PrincipalType.SharePoint,PrincipalType.Security],
-                  onPropertyChange: this.onPropertyPaneFieldChanged,
-                  context: this.context,
-                  properties: this.properties,
-                  onGetErrorMessage: null,
-                  deferredValidationTime: 0,
-                  key: 'peopleFieldId'
-                }),
+                // PropertyFieldPeoplePicker('people',{
+                //   label: 'Add people or group to list',
+                //   initialData: this.properties.people,
+                //   allowDuplicate: false,
+                //   principalType: [PrincipalType.Users, PrincipalType.SharePoint,PrincipalType.Security],
+                //   onPropertyChange: this.onPropertyPaneFieldChanged,
+                //   context: this.context,
+                //   properties: this.properties,
+                //   onGetErrorMessage: null,
+                //   deferredValidationTime: 0,
+                //   key: 'peopleFieldId'
+                // }),
                 PropertyPaneButton("button",{
                   onClick:null,
                   text:"Save",

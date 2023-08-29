@@ -23,7 +23,7 @@ interface IListProps{
 
 interface CheckedState {
 checked: boolean;
-date:any
+date:any;
 }
 
 const SuccessExample = (p?:IListProps) => (
@@ -46,23 +46,23 @@ const SuccessExample = (p?:IListProps) => (
     super(props);
     this.state = { checked: this.props.isChecked,
       date:""
-    }
+    };
   }
   
    
    
-async componentDidUpdate(prevProps: Readonly<IPolicyWebPartProps>, prevState: Readonly<CheckedState>, snapshot?: any): Promise<void> {
+public async componentDidUpdate(prevProps: Readonly<IPolicyWebPartProps>, prevState: Readonly<CheckedState>, snapshot?: any): Promise<void> {
   this.listName = this.getListName(this.props.listName);
   if(prevProps.isChecked !== this.props.isChecked && this.props.listName !== prevProps.listName){
     const listName = this.getListName(this.props.listName);
-    const result = this._services.hasApprovedSelectedList(this.props.context, listName,this.props.siteCollection)
+    const result = this._services.hasApprovedSelectedList(this.props.context, listName,this.props.siteCollection);
     result.then((res:any)=>{
-        this.setState({checked: res.checked, date: res.modified})
-      })
+        this.setState({checked: res.checked, date: res.modified});
+      });
   }
 }
 
-async componentDidMount(): Promise<void> {
+public async componentDidMount(): Promise<void> {
   this.listName = this.getListName(this.props.listName);
   //  this._services.patchTenantIdTolist(this.props.context);
 
@@ -91,15 +91,9 @@ async componentDidMount(): Promise<void> {
      var {
        description,
        titleText,
-       listName,
-       isChecked,
-       context,
        isConfigured,
-       fields,
        dateSigned,
-       siteName,
        checkboxLabel,
-       CheckboxPlaceholder
      } = this.props;
 
      

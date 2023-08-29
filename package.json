@@ -33,5 +33,19 @@
     "@types/webpack-env": "1.13.1",
     "ajv": "~5.2.2",
     "gulp": "~4.0.2"
-  }
+  },
+  "description": "## Summary",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mally05/Policy-Webpart-spfx.git"
+  },
+  "author": "Farid Kasambula",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mally05/Policy-Webpart-spfx/issues"
+  },
+  "homepage": "https://github.com/Mally05/Policy-Webpart-spfx#readme"
 }

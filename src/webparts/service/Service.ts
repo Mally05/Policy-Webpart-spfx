@@ -238,43 +238,44 @@ export class SPService {
       }
     }
 
-  public async getListOfgroups(context: WebPartContext,siteUrl:WebPartContext) {
-    const uri = `${siteUrl}/_api/web/sitegroups`;
+//   public async getListOfgroups(context: WebPartContext,siteUrl:WebPartContext) {
+//     const uri = `${siteUrl}/_api/web/sitegroups`;
 
-    context.spHttpClient.get(uri,SPHttpClient.configurations.v1)
-    .then((response:any) =>{
-      if(response.ok){
-        response.json().then((member:any) => {
-          console.log("O365 groups: ",member);
-        });
-      }
-    });
-}
+//     context.spHttpClient.get(uri,SPHttpClient.configurations.v1)
+//     .then((response:any) =>{
+//       if(response.ok){
+//         response.json().then((member:any) => {
+//           console.log("O365 groups: ",member);
+//         });
+//       }
+//     });
+// }
 
-   public async getGroupMembers(context: WebPartContext, siteUrl:WebPartContext, group:Array<any>){
+  //  public async getGroupMembers(context: WebPartContext, siteUrl:WebPartContext, group:Array<any>){
+  //   console.log(group.length)
+  //   if(group.length < 0)
+  //   {
+  //     for (let index = 0; index < group.length; index++) {
+  //       const element = group[index];
+        
+  //       const uri = `${siteUrl}/_api/web/sitegroups/getbyname('${element.fullName}')/users`;
+  
+  //       context.spHttpClient.get(uri,SPHttpClient.configurations.v1)
+  //       .then((response:any) =>{
+  //         if(response.ok){
+  //           response.json().then((member:any) => {
+  //             console.log("Get Members: ",member);
+  //             return member;
+  //           });
+  //         }
+  //       });
+  //     }
+  //   }
+  //   else{
+  //     console.warn("No members found!")
+  //   }
 
-    for (let index = 0; index < group.length; index++) {
-      const element = group[index];
-      
-      const uri = `${siteUrl}/_api/web/sitegroups/getbyname('${element.fullName}')/users`;
-
-      context.spHttpClient.get(uri,SPHttpClient.configurations.v1)
-      .then((response:any) =>{
-        if(response.ok){
-          response.json().then((member:any) => {
-            console.log("Get Members: ",member);
-
-            return member;
-          });
-        }
-      });
-    }
-
-  }
-
-    public async addUsersToSharePointList(){
-
-    }
+  // }
 
     public async setListPermissions(context: WebPartContext,listName:string, ){
 
