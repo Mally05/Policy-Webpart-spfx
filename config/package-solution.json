@@ -1,14 +1,14 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "wpo-signoff",
+    "name": "KM-Sign",
     "id": "1ad5ebc1-b0d3-4b22-af62-f425738add39",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
     "developer": {
-      "name": "",
+      "name": "Farid Kasambula",
       "websiteUrl": "",
       "privacyUrl": "",
       "termsOfUseUrl": "",
@@ -45,6 +45,6 @@
     ]
   },
   "paths": {
-    "zippedPackage": "wpo-signoff.sppkg"
+    "zippedPackage": "KM-Sign.sppkg"
   }
 }

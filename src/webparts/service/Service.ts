@@ -1,5 +1,5 @@
 import { WebPartContext } from "@microsoft/sp-webpart-base";
-import { sp,SearchResults, Items, ISiteGroupInfo, Item, Web } from "@pnp/sp/presets/all";
+import { sp,SearchResults,  Web } from "@pnp/sp/presets/all";
 import {
   SPHttpClient,
   SPHttpClientResponse,
@@ -13,12 +13,6 @@ import "@pnp/sp/items";
 import "@pnp/sp/security/web";
 import "@pnp/sp/security/list";
 import "@pnp/sp/security/item";
-import { Guid, Validate } from "@microsoft/sp-core-library";
-import { IList } from "@pnp/sp/lists";
-import { resultItem } from "office-ui-fabric-react/lib/components/FloatingPicker/PeoplePicker/PeoplePicker.scss";
-import { ISecurableMethods } from "@pnp/sp/security/types";
-import {IPolicyWebPartProps} from "../../webparts/policy/components/IPolicyWebPartProps";
-import { GroupShowAll } from "office-ui-fabric-react";
 
 
 export class SPService {
